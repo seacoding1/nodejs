@@ -3,9 +3,19 @@ const express = require('express');
 var cors = require('cors');
 const app = express();
 const port = 8089;
+const bodyParser = require('body-parser');
+
+const config = require("./config/key");
+
+const { User } = require("./models/users");
+
+//application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({extended : true}));
+//application/json
+app.use(bodyParser.json());
 
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://user:user1234@localhost:27017/test')
+mongoose.connect(config.mongoURI)
                   .then(() => console.log('MongoDB Connected...'))
                   .catch(err => console.log(err));
 app.use(cors())
@@ -31,9 +41,27 @@ app.get('/sound/:name', (req, res) => {
 
 })
 
-app.get('/dog', (req, res) => {
-    res.json({'sound':'냐옹'})
+
+app.post('/register', (req, res) => {
+
+    //회원가입 할 때 필요한 정보들을 client에서 가져오면
+    //그것들을 데이터 베이스에 넣어준다.
+    const user = new User(req.body);
+    //user모델에 정보가 저장됨
+    //실패 시, 실패한 정보를 보내줌
+    user.save().then(() => {
+       res.status(200).json({
+        success : true
+       })
+    }).catch((err)=>{
+        return res.json({success : false, err})
+    });
+
 })
+
+
+
+
 
 
 app.listen(port, () => {
